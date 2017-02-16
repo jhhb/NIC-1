@@ -4,11 +4,12 @@
 #include <cstdlib>
 #include <stdio.h>
 #include <iostream>
+#include <cmath>
 #include "utility.h"
 
 using namespace std;
 
-vector< vector<int> > readFile(std::string filename){
+vector< vector<int> > readFile(std::string filename, int *numberOfVariables, int *numberOfClauses){
 
 
     ifstream cnfStream; // will be the CNF file
@@ -41,6 +42,10 @@ vector< vector<int> > readFile(std::string filename){
     			}
     			numVariables = atoi(line.substr(5, startIndex).c_str());
     			numClauses = atoi(line.substr(startIndex+1, 100).c_str());
+
+                *numberOfVariables = numVariables;
+                *numberOfClauses = numClauses;
+
     			cout<<"Got numVariables = "<< numVariables <<"\n"<<endl;
     			cout<<"Got numClauses = "<< numClauses <<"\n"<<endl;    			
     		}
@@ -95,6 +100,32 @@ int getFitness(vector< vector<int> > cnf, bool cs[])
             }
             indexNum--;
             if((cnf.at(i).at(j) > 0 && cs[indexNum]) || (cnf.at(i).at(j) < 0 && !cs[indexNum]))
+            {
+                fitValue++;
+                break;
+            }
+                
+        }
+    }
+    return fitValue;
+}
+
+int getFitnessIntegers(vector<vector<int> > CNF, vector<int> candidate){
+      int indexNum;
+    
+    int fitValue = 0;
+
+    for(int i = 0; i < CNF.size(); i++)
+    {
+        for(int j = 0; j < CNF.at(i).size(); j++)
+        {
+            indexNum = CNF.at(i).at(j);
+            if(indexNum < 0)
+            {
+                indexNum = indexNum / -1;
+            }
+            indexNum--;
+            if((CNF.at(i).at(j) > 0 && candidate[indexNum]) || (CNF.at(i).at(j) < 0 && !candidate[indexNum]))
             {
                 fitValue++;
                 break;
