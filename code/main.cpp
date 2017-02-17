@@ -386,6 +386,9 @@ void pbil(string fileName, int numIndividuals, double plr, double nlr, double mu
 
 	int itNum = 0;
 	bool updating = true;
+
+	double firstFitness = 0;
+
 	while(updating)
 	{
 		vector< vector<bool> > cs = genCS(numIndividuals, probVector);
@@ -395,6 +398,17 @@ void pbil(string fileName, int numIndividuals, double plr, double nlr, double mu
 		{
 			fitness.push_back(getFitness(cnf, cs.at(i)));
 		}
+
+		if(itNum == 0){
+
+			for(int i =0; i<fitness.size(); i++){
+				if(fitness[i] > firstFitness){
+					firstFitness = fitness[i];
+				}
+			}
+			cout<<"First fitness from PBIL is: "<<firstFitness<<endl;
+		}
+
 		//finds best and worst solution
 		int bestIndex = 0;
 		int worstIndex = 0;
