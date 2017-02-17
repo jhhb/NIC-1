@@ -23,6 +23,12 @@ vector<vector<int> > boltzmannSelection( vector< vector<int> > candidates, vecto
 vector<int> gaMutate(vector<int> child, double probabilityOfMutation);
 void runGA(string fileName, int numberOfIndividuals, string selection, string crossover, double crossoverProbability, double mutationProbability, int numberOfGenerations);
 
+int getFitness(vector< vector<int> > cnf, vector<bool> cs);
+void printVofV(vector< vector<int> > cnf);
+void pbil(string fileName, int numIndividuals, double plr, double nlr, double mutProb, double mutAmount, int numIterations);
+vector< vector<bool> > genCS(int numIndividuals, vector<double> probVector);
+vector<double> mutate(vector<double> pv, double mutProb, double mutAmount);
+
 bool descending (candidateFitnessAndPosition i, candidateFitnessAndPosition j) { return (i.fitnessScore > j.fitnessScore); }
 
 
@@ -32,8 +38,10 @@ int main( int argc, const char* argv[] )
 	//format of a GA run
 
 	runGA("/Users/jamesboyle/Desktop/NIC-1/NIC-1/project1-ga-pbil-for-maxsat 2/maxsat-problems/maxsat-crafted/MAXCUT/SPINGLASS/t3pm3-5555.spn.cnf",
-		100, "ts", "1c", 0.7, 0.05, 100);
+		100, "ts", "1c", 0.7, 0.01, 100);
 
+	pbil("/Users/jamesboyle/Desktop/NIC-1/NIC-1/project1-ga-pbil-for-maxsat 2/maxsat-problems/maxsat-crafted/MAXCUT/SPINGLASS/t3pm3-5555.spn.cnf",
+		100, 0.01, 0.01, 0.01, 0.05, 20);
 }
 
 
@@ -41,10 +49,10 @@ int main( int argc, const char* argv[] )
 new array.
 
 We then return the newCandidates
-
 */
-vector<vector<int> > crossoverWrapper(string crossover, int numberOfIndividuals, vector<vector<int> > breedingPool, double mutationProbability){
+vector<vector<int> > crossoverWrapper(string crossover, int numberOfIndividuals, vector<vector<int> > breedingPool, double crossoverProbability, double mutationProbability){
 	vector<vector<int> > newCandidates;
+	vector<int> child;
 
 	//1point crossover
 	if(crossover == "1c"){
@@ -57,7 +65,19 @@ vector<vector<int> > crossoverWrapper(string crossover, int numberOfIndividuals,
 				int parent2Index = rand() % breedingPool.size();
 				
 				//Is this right???
-				vector<int> child = onePointCrossover(breedingPool[parent1Index], breedingPool[parent2Index], rand() % breedingPool[parent1Index].size() );
+
+				double randomProbability = (rand() % 101) / 100.0f;
+    			//used to be randomProb <= prob
+				if( mutationProbability <= randomProbability){
+
+					child = onePointCrossover(breedingPool[parent1Index], breedingPool[parent2Index], rand() % breedingPool[parent1Index].size() );
+				}
+				else{
+					child = breedingPool[parent1Index];
+				}
+
+				/*Call crossover probability */
+				/*Call crossover probability */
 
 				gaMutate(child, mutationProbability);
 
@@ -76,8 +96,19 @@ vector<vector<int> > crossoverWrapper(string crossover, int numberOfIndividuals,
 			while(offspringCounter < numberOfIndividuals){
 				int parent1Index = rand() % breedingPool.size();
 				int parent2Index = rand() % breedingPool.size();
-				vector<int> child = uniformCrossover(breedingPool[parent1Index], breedingPool[parent2Index]);
 
+				/*Call crossover probability */
+
+				double randomProbability = (rand() % 101) / 100.0f;
+
+				if( mutationProbability <= randomProbability){
+					child = uniformCrossover(breedingPool[parent1Index], breedingPool[parent2Index]);
+				}
+				else{
+					child = breedingPool[parent1Index];
+				}
+
+				/*Call crossover probability */
 				gaMutate(child, mutationProbability);
 
 				newCandidates.push_back(child);
@@ -121,15 +152,19 @@ void runGA(string fileName, int numberOfIndividuals, string selection, string cr
 			breedingPool = tournamentSelection(candidates, vectorOfClauses);
 
 		}
-		else{
+		else if(selection=="bs"){
 			//pass numberOfClauses as a parameter so that we can easily go from the fitness number to the proportion / percentage
 			breedingPool = boltzmannSelection(candidates, vectorOfClauses, numberOfClauses);
 			//boltzmann
 		}
+		else{
+			cout<<"ERROR SELECTION\n"<<endl;
+			exit(-1);
+		}
 
 		//crossover
 		/*Need to check if we are doing 1c, uc correctly, if uc needs a probability associated with it or a probability for one parent */
-		vector<vector<int> > newCandidates = crossoverWrapper(crossover, numberOfIndividuals, breedingPool, mutationProbability);
+		vector<vector<int> > newCandidates = crossoverWrapper(crossover, numberOfIndividuals, breedingPool, crossoverProbability, mutationProbability);
 
 		generationCounter+=1;
 
@@ -158,9 +193,12 @@ vector<int> gaMutate(vector<int> child, double probabilityOfMutation){
 
 	//IS THIS RIGHT???
 
+		//rand() / RAND_MAX	//cast to double 
+
     double randomProbability = (rand() % 101) / 100.0f;
 
-		if(randomProbability <= probabilityOfMutation){
+    	//used to be randomProb <= prob
+		if(probabilityOfMutation <= randomProbability){
 			if(child[i] == 0){
 				child[i] = 1;
 			}
@@ -182,6 +220,10 @@ We randomly select mValue candidates, get their fitness, save the associated fit
 Outside the for loop, we sort these, and then take the k with the highest fitness Scores
 */
 vector<vector<int> > tournamentSelection(vector< vector<int> > candidates, vector<vector<int> > vectorOfClauses){
+/*
+Ask majercik about k and mValue 
+*/
+
 
 /*
 HOW DO WE PICK THESE??
@@ -256,7 +298,7 @@ vector<vector<int> > boltzmannSelection(vector< vector<int> > candidates, vector
     double numerator = pow(EulerConstant, fitness);
   //  cout<<numerator/denom<<endl;
 
-    if(numerator/denom >= randomProbability){
+    if(numerator/denom <= randomProbability){
       breedingPopulation.push_back(candidates[randomIndex]);
       counter+=1;
     }
@@ -293,15 +335,16 @@ vector<vector<int> > rankSelection( vector< vector<int> > candidates, vector< ve
   //yields a vector of structs where they are ordered by highest fitness score to lowest fitness score
   sort(candidateFitness.begin(), candidateFitness.end(), descending);
 
-  //calculate sum from i = 1 to N
-  int iValueInSum = 1;
-  double sum = iValueInSum;
-
-  for(int i = 0; i < candidateFitness.size(); i++){
-    candidateFitness[i].probabilityForSelection = iValueInSum / sum;
-    iValueInSum +=1;
-    sum += iValueInSum;
+/* Ostensibly fixes the sum issue */
+  double sum;
+  for(int i =1; i <candidateFitness.size()+1; i++){
+  	sum+=i;
   }
+
+  for(int i = 1; i < candidateFitness.size()+1; i++){
+  	candidateFitness[i-1].probabilityForSelection = (double) i  /sum;
+  }
+  /*Fixes sum */
 
   vector<vector<int> > breedingPopulation;
 
@@ -312,7 +355,7 @@ vector<vector<int> > rankSelection( vector< vector<int> > candidates, vector< ve
 
     double randomProbability = (rand() % 101) / 100.0f;
 
-    if(candidateFitness[randomIndex].probabilityForSelection >= randomProbability){
+    if(candidateFitness[randomIndex].probabilityForSelection <= randomProbability){
       breedingPopulation.push_back(candidates[candidateFitness[randomIndex].indexInCandidateVector]);
       counter+=1;
     }
@@ -322,6 +365,195 @@ vector<vector<int> > rankSelection( vector< vector<int> > candidates, vector< ve
   return breedingPopulation;
 
 }
+
+void pbil(string fileName, int numIndividuals, double plr, double nlr, double mutProb, double mutAmount, int numIterations)
+{
+	//reads in cnf
+	int numVar;
+	int numClauses;
+	vector< vector<int> > cnf = readFile(fileName, &numVar, &numClauses);
+
+	//gens probability vector
+	vector<double> probVector;
+	double startingValue = 0.5;
+	for(int i = 0; i < numVar; i++)
+	{
+		probVector.push_back(startingValue);
+	}
+
+	//vector of ints used to keep track of fitness
+	vector<int> fitness;
+
+	int itNum = 0;
+	bool updating = true;
+	while(updating)
+	{
+		vector< vector<bool> > cs = genCS(numIndividuals, probVector);
+
+		//gets fitness for each solution
+		for(int i = 0; i < numIndividuals; i++)
+		{
+			fitness.push_back(getFitness(cnf, cs.at(i)));
+		}
+		//finds best and worst solution
+		int bestIndex = 0;
+		int worstIndex = 0;
+		for(int i = 1; i < numIndividuals - 1; i = i + 2)
+		{
+			if(fitness.at(i) < fitness.at(i+1))
+			{
+				if(fitness.at(i) < fitness.at(worstIndex))
+				{
+					worstIndex = i;
+				}
+				if(fitness.at(i+1) > fitness.at(bestIndex))
+				{
+					bestIndex = i + 1;
+				}
+			}else{
+				if(fitness.at(i+1) < fitness.at(worstIndex))
+				{
+					worstIndex = i + 1;
+				}
+				if(fitness.at(i) > fitness.at(bestIndex))
+				{
+					bestIndex = i;
+				}
+			}
+		}
+
+		//break if the solution is found
+		if(fitness.at(bestIndex) == cnf.size())
+		{
+			break;
+			//add cout
+		}
+
+
+		//updating the probVector
+		//create bestVect (where true=1)
+		//create worstVect (where false=1)
+		//needs to be 1s and 0s to update probVector
+		vector<int> bestVect;
+		vector<int> worstVect;
+
+		for(int i = 0; i < numVar; i++)
+		{
+			if(cs.at(bestIndex).at(i) == true)
+			{
+				bestVect.push_back(1);
+			}else{
+				bestVect.push_back(0);
+			}
+
+			if(cs.at(worstIndex).at(i) == true)
+			{
+				worstVect.push_back(0);
+			}else{
+				worstVect.push_back(1);
+			}
+
+			if(bestVect.at(i) != worstVect.at(i))
+			{
+				probVector.at(i) = probVector.at(i) * (1.0 - plr) + bestVect.at(i) * plr;
+				probVector.at(i) = probVector.at(i) * (1.0 - nlr) + worstVect.at(i) * nlr;
+			}
+
+		}
+
+		probVector = mutate(probVector, mutProb, mutAmount);
+		itNum++;
+		if(itNum == numIterations)
+		{
+			updating = false;
+		}
+	}
+
+	double maxFitness = 0;
+
+	for(int i =0; i<fitness.size(); i++){
+		if(fitness[i] > maxFitness){
+			maxFitness = fitness[i];
+		}
+	}
+	cout<<"Max fitness from PBIL is: "<<maxFitness<<endl;
+	//couts
+}
+
+//function that generates candidate solutions taking in N and probVector --> vector of vectors
+//TESTED: GOOD
+vector< vector<bool> > genCS(int numIndividuals, vector<double> probVector)
+{
+	vector< vector<bool> > cs;
+	for(int i = 0; i < numIndividuals; i++)
+	{
+		vector<bool> csToAdd;
+		cs.push_back(csToAdd);
+		for(int j = 0; j < probVector.size(); j++)
+		{
+			bool csBool;
+			cs.at(i).push_back(csBool);
+			double prob = (double)rand()/(double)RAND_MAX;
+			if(prob <= probVector.at(j))
+			{
+				cs.at(i).at(j) = true;
+			}else{
+				cs.at(i).at(j) = false;
+			}
+		}
+	}
+	return cs;
+}
+
+vector<double> mutate(vector<double> pv, double mutProb, double mutAmount)
+{
+	vector<double> newPV = pv;
+	for(int i = 0; i < pv.size(); i++)
+	{
+		double prob1 = (double)rand()/(double)RAND_MAX;
+		int mutateDir;
+		if(prob1 <= mutProb)
+		{
+			double prob2 = (double)rand()/(double)RAND_MAX;
+			if(prob2 <= 0.5)
+			{
+				mutateDir = 1;
+			}else{
+				mutateDir = 0;
+			}
+			newPV.at(i) = pv.at(i) * (1.0 - mutAmount) + mutateDir * (mutAmount);
+		}
+	}
+	return newPV;
+}
+
+int getFitness(vector< vector<int> > cnf, vector<bool> cs)
+{
+	int indexNum;
+	int fitValue = 0;
+
+	for(int i = 0; i < cnf.size(); i++)
+	{
+		for(int j = 0; j < cnf.at(i).size(); j++)
+		{
+			indexNum = cnf.at(i).at(j);
+			if(indexNum < 0)
+			{
+				indexNum = indexNum / -1;
+			}
+			indexNum--;
+			if((cnf.at(i).at(j) > 0 && cs.at(indexNum)) || (cnf.at(i).at(j) < 0 && !cs.at(indexNum)))
+			{
+				fitValue++;
+				break;
+			}
+				
+		}
+	}
+	return fitValue;
+}
+
+
 
 void martinTests(){
 
