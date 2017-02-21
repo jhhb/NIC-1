@@ -31,14 +31,54 @@ vector<double> mutate(vector<double> pv, double mutProb, double mutAmount);
 
 bool descending (candidateFitnessAndPosition i, candidateFitnessAndPosition j) { return (i.fitnessScore < j.fitnessScore); }
 
-
-
 int main( int argc, const char* argv[] )
 {
 	//format of a GA run
+	string filePath = "/Users/jamesboyle/Desktop/NIC-1/NIC-1/project1-ga-pbil-for-maxsat 2/maxsat-problems/maxsat-crafted/MAXCUT/SPINGLASS/";
 
-	runGA("/Users/jamesboyle/Desktop/NIC-1/NIC-1/project1-ga-pbil-for-maxsat 2/maxsat-problems/maxsat-crafted/MAXCUT/SPINGLASS/t3pm3-5555.spn.cnf",
-		100, "rs", "1c", 0.7, 0.01, 200);
+
+	string fileName = "t7pm3-9999.spn.cnf";
+	//"/Users/jamesboyle/Desktop/NIC-1/NIC-1/project1-ga-pbil-for-maxsat 2/maxsat-problems/maxsat-crafted/MAXCUT/SPINGLASS/t3pm3-5555.spn.cnf";
+	
+	string fullPath = filePath + fileName;
+	int numberOfIndividuals = 100;
+	string selection = "ts";
+	string crossover = "1c";
+	double crossoverProbability = 0.7;
+	double mutationProbability = 0.01;
+	double generations = 300;
+
+	for(int i =0; i<2;i++){	//crossover
+		if(i == 1){
+			crossover = "1c";
+		}
+		else{
+			crossover = "uc";
+		}
+		for(int z=0; z<3; z++){
+			if(z == 0){
+				selection = "ts";
+			}
+			else if(z == 1){
+				selection = "rs";
+			}
+			else{
+				selection = "bs";
+			}
+			for(int a = 100; a < 800; a+=500){	//indiv
+				for(int b = 300; b < 1000; b+=300){	//generations
+					cout<<"Running with "<<fullPath<<" "<<crossover<<" "<<selection<<" individuals = "<<a<<" generations ="<<b<<endl;
+					runGA(fullPath, a, selection, crossover, crossoverProbability, mutationProbability, b);
+				}
+			}
+
+		}
+	}
+
+
+
+	// runGA(fileName,
+	// 	numberOfIndividuals, selection, crossover, crossoverProbability, mutationProbability, generations);
 
 	// pbil("/Users/mbernard/Computer Science/Nature_Inspired/project1-ga-pbil-for-maxsat/maxsat-problems/maxsat-crafted/MAXCUT/SPINGLASS/t3pm3-5555.spn.cnf",
 	// 	100, 0.01, 0.01, 0.01, 0.05, 20);
@@ -146,22 +186,35 @@ void runGA(string fileName, int numberOfIndividuals, string selection, string cr
 	vector<vector<int> > vectorOfClauses = readFile(fileName, &numberOfVariables, &numberOfClauses);	//clauses in vector<vector<int>>
 	vector<vector<int> > breedingPool;	//breeding pool after selection occurs
 	vector<vector<int> > candidates = genSolutions(numberOfVariables, numberOfIndividuals); //starting candidate solutions
-	double max = 0;
-	double firstBestFitness;
+
+	int maxFitness = 0;
+	int indexOfBestThisGenerationFitness;
+	double bestFitnessSoFar = 0;
+	int indexOfCandidateWithBestFitness;
+
 	/* Done just to see what our "best" is at the start so we can compare at end */
-	for(int i = 0; i < candidates.size();i++){
-		if(getFitnessIntegers(vectorOfClauses, candidates[i]) > max){
-			max = getFitnessIntegers(vectorOfClauses, candidates[i]);
-		}
-
-	}
-
-	cout<<"First best fitness: "<<endl<<max<<"\n"<<endl;
-
-	firstBestFitness= max;
 
 	while(generationCounter < numberOfGenerations){
-		cout<<generationCounter<<"\n"<<endl;
+		int thisGenerationFitness = 0;
+
+		for(int i = 0; i < candidates.size();i++){
+			int fitness = getFitnessIntegers(vectorOfClauses, candidates[i]);
+
+			if(fitness > thisGenerationFitness){
+				thisGenerationFitness = fitness;
+				indexOfBestThisGenerationFitness = i;
+			}
+		}
+
+		if(thisGenerationFitness > maxFitness){
+			maxFitness = thisGenerationFitness;
+			indexOfCandidateWithBestFitness = indexOfBestThisGenerationFitness;
+		}
+
+		if(maxFitness == numberOfClauses){
+			break;
+			//time to print
+		}
 		//select from breeding pool
 		if(selection == "rs"){
 			breedingPool = rankSelection(candidates, vectorOfClauses);
@@ -181,27 +234,23 @@ void runGA(string fileName, int numberOfIndividuals, string selection, string cr
 		}
 
 		//crossover
-		/*Need to check if we are doing 1c, uc correctly, if uc needs a probability associated with it or a probability for one parent */
 		vector<vector<int> > newCandidates = crossoverWrapper(crossover, numberOfIndividuals, breedingPool, crossoverProbability, mutationProbability);
 		generationCounter+=1;
 
 		candidates = newCandidates;
 	}
 
-	for(int i = 0; i < candidates.size();i++){
-		if(getFitnessIntegers(vectorOfClauses, candidates[i]) > max){
-			max = getFitnessIntegers(vectorOfClauses, candidates[i]);
-		}
+	string bestAsString;
 
+	for(int i = 0; i < candidates[indexOfCandidateWithBestFitness].size(); i++){
+		bestAsString += to_string(candidates[indexOfCandidateWithBestFitness][i]);
 	}
-	cout<<"Filename: "<<fileName<<"\n"<<endl;
-	cout<<numberOfVariables<<" variables and "<<numberOfClauses<<" clauses\n"<<endl;
-	cout<<"Best assignment satisfies "<<numberOfClauses<<" clauses and "<<max / numberOfClauses<<"%"<<" of clauses\n"<<endl;
 
-	cout<<"First best fitness: "<<endl<<firstBestFitness<<"\n"<<endl;
-
-	cout<<"Final best fitness: "<<endl<<max<<"\n"<<endl;
-
+	cout<<"1. Filename: "<<fileName<<"\n"<<endl;
+	cout<<"2. Number of Variables: "<<numberOfVariables<<" and Number of Clauses:"<<numberOfClauses<<endl;
+	cout<<"3. Best assignment satisfies "<<maxFitness<<" clauses and "<<100.0 * (double)maxFitness / numberOfClauses<<"%"<<" of clauses"<<endl;
+	cout<<"4. Assignment achieving best results: "<<bestAsString<<endl;
+	cout<<"5. (0-based) Iteration with best fitness: "<<indexOfCandidateWithBestFitness<<endl;
 }
 
 vector<int> gaMutate(vector<int> child, double probabilityOfMutation){
@@ -222,7 +271,6 @@ vector<int> gaMutate(vector<int> child, double probabilityOfMutation){
 	return child;
 }
 
-/*Fixed and working */
 vector<vector<int> > tournamentSelection(vector< vector<int> > candidates, vector<vector<int> > vectorOfClauses){
 
 	int counter = 0;
@@ -251,14 +299,7 @@ vector<vector<int> > tournamentSelection(vector< vector<int> > candidates, vecto
 
 }
 
-
-/* Why the fuck is this so slow? And how can we speed it up? 
-
-First calculate the denominator of the probability calculation, which is just the some of e^(fitness) for each individual.
-
-*/
 vector<vector<int> > boltzmannSelection(vector< vector<int> > candidates, vector<vector<int> > vectorOfClauses, int numberOfClauses){
-
 
   double denom = 0;
   double scale = 100.0;
@@ -287,7 +328,6 @@ vector<vector<int> > boltzmannSelection(vector< vector<int> > candidates, vector
     double randomProbability =  (double)rand()/ (double)RAND_MAX;
 
     double numerator = efitness[randomIndex];
-   // cout << numerator / denom << endl;
 
     if(randomProbability <= numerator/denom){
       breedingPopulation.push_back(candidates[randomIndex]);
@@ -296,18 +336,14 @@ vector<vector<int> > boltzmannSelection(vector< vector<int> > candidates, vector
   }
 
   return breedingPopulation;
-
 }
 
 /*
-
 For each candidate, create a struct for it with probability of selection, fitness, and index in original candidate vector. This is so we can get the right candidate
 after we sort our vector for ranking.
 
 */
 vector<vector<int> > rankSelection( vector< vector<int> > candidates, vector< vector<int> > vectorOfClauses){
-
-
 
   vector<candidateFitnessAndPosition> candidateFitness;
 
@@ -326,9 +362,6 @@ vector<vector<int> > rankSelection( vector< vector<int> > candidates, vector< ve
   //yields a vector of structs where they are ordered by highest fitness score to lowest fitness score
   sort(candidateFitness.begin(), candidateFitness.end(), descending);
 
-
-
-/* Ostensibly fixes the sum issue */
   double sum = 0.0f;
   for(int i =1; i <candidateFitness.size()+1; i++){
   	sum+=i;
@@ -337,16 +370,6 @@ vector<vector<int> > rankSelection( vector< vector<int> > candidates, vector< ve
   for(int i = 1; i < candidateFitness.size()+1; i++){
   	candidateFitness[i-1].probabilityForSelection = (double) i  /sum;
   }
-  /*Fixes sum */
-
-  for(int i = 0; i < candidateFitness.size(); i++){
-  	cout<<"Rank: "<<i<<endl;
-  	cout<<"Fitness: "<<candidateFitness[i].fitnessScore<<endl;
-  	cout<<"probabilityForSelection: "<<candidateFitness[i].probabilityForSelection<<endl;
-
-  }
-
-
   vector<vector<int> > breedingPopulation;
 
   int counter = 0;
@@ -360,11 +383,8 @@ vector<vector<int> > rankSelection( vector< vector<int> > candidates, vector< ve
       breedingPopulation.push_back(candidates[candidateFitness[randomIndex].indexInCandidateVector]);
       counter+=1;
     }
-
   }
-
   return breedingPopulation;
-
 }
 
 void pbil(string fileName, int numIndividuals, double plr, double nlr, double mutProb, double mutAmount, int numIterations)
@@ -563,7 +583,6 @@ int getFitness(vector< vector<int> > cnf, vector<bool> cs)
 				fitValue++;
 				break;
 			}
-				
 		}
 	}
 	return fitValue;
