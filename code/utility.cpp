@@ -46,8 +46,8 @@ vector< vector<int> > readFile(std::string filename, int *numberOfVariables, int
                 *numberOfVariables = numVariables;
                 *numberOfClauses = numClauses;
 
-    			cout<<"Got numVariables = "<< numVariables <<"\n"<<endl;
-    			cout<<"Got numClauses = "<< numClauses <<"\n"<<endl;    			
+//    			cout<<"Got numVariables = "<< numVariables <<"\n"<<endl;
+//    			cout<<"Got numClauses = "<< numClauses <<"\n"<<endl;    			
     		}
 
     		else if( (strncmp(&line[0], "c", 1)) != 0) {
@@ -68,7 +68,6 @@ vector< vector<int> > readFile(std::string filename, int *numberOfVariables, int
     		
     	}
     }
-
 	return vectorOfClauses;
 }
 
