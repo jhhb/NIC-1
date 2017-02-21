@@ -29,7 +29,7 @@ void pbil(string fileName, int numIndividuals, double plr, double nlr, double mu
 vector< vector<bool> > genCS(int numIndividuals, vector<double> probVector);
 vector<double> mutate(vector<double> pv, double mutProb, double mutAmount);
 
-bool descending (candidateFitnessAndPosition i, candidateFitnessAndPosition j) { return (i.fitnessScore > j.fitnessScore); }
+bool descending (candidateFitnessAndPosition i, candidateFitnessAndPosition j) { return (i.fitnessScore < j.fitnessScore); }
 
 
 
@@ -37,11 +37,11 @@ int main( int argc, const char* argv[] )
 {
 	//format of a GA run
 
-	runGA("/Users/mbernard/Computer Science/Nature_Inspired/project1-ga-pbil-for-maxsat/maxsat-problems/maxsat-crafted/MAXCUT/SPINGLASS/t3pm3-5555.spn.cnf",
-		100, "rs", "uc", 0.7, 0.01, 20);
+	runGA("/Users/jamesboyle/Desktop/NIC-1/NIC-1/project1-ga-pbil-for-maxsat 2/maxsat-problems/maxsat-crafted/MAXCUT/SPINGLASS/t3pm3-5555.spn.cnf",
+		100, "rs", "1c", 0.7, 0.01, 200);
 
-	pbil("/Users/mbernard/Computer Science/Nature_Inspired/project1-ga-pbil-for-maxsat/maxsat-problems/maxsat-crafted/MAXCUT/SPINGLASS/t3pm3-5555.spn.cnf",
-		100, 0.01, 0.01, 0.01, 0.05, 20);
+	// pbil("/Users/mbernard/Computer Science/Nature_Inspired/project1-ga-pbil-for-maxsat/maxsat-problems/maxsat-crafted/MAXCUT/SPINGLASS/t3pm3-5555.spn.cnf",
+	// 	100, 0.01, 0.01, 0.01, 0.05, 20);
 }
 
 
@@ -66,7 +66,7 @@ vector<vector<int> > crossoverWrapper(string crossover, int numberOfIndividuals,
 	
 				double randomProbability = (double)rand()/(double)RAND_MAX;
     			//used to be randomProb <= prob
-				if(crossoverProbability <= randomProbability){
+				if(randomProbability <= crossoverProbability){
 
 					int crossPoint = rand() % breedingPool[i].size();
 					child1 = onePointCrossover(breedingPool[i], breedingPool[i+1], crossPoint);
@@ -222,57 +222,32 @@ vector<int> gaMutate(vector<int> child, double probabilityOfMutation){
 	return child;
 }
 
-
-/*
-We arbitrarily pick a k and an mValue and use them for tournament selection.
-
-We randomly select mValue candidates, get their fitness, save the associated fitness and index into a candidateStruct, and push it back into a candidate struct
-
-Outside the for loop, we sort these, and then take the k with the highest fitness Scores
-*/
+/*Fixed and working */
 vector<vector<int> > tournamentSelection(vector< vector<int> > candidates, vector<vector<int> > vectorOfClauses){
-/*
-Ask majercik about k and mValue 
-*/
 
+	int counter = 0;
 
-/*
-HOW DO WE PICK THESE??
-*/
+	vector<vector<int> > breedingPopulation;
 
+	while(counter < candidates.size()){
 
+		int firstCandidateIndex = rand() % candidates.size();
+		int secondCandidateIndex = rand() % candidates.size();
 
-  int k = 1; // k = 1;
+		int firstCandidateFitness = getFitnessIntegers(vectorOfClauses, candidates[firstCandidateIndex]);
+		int secondCandidateFitness = getFitnessIntegers(vectorOfClauses, candidates[secondCandidateIndex]);
 
-  int mValue = 2; // mValue = 2;
+		if(firstCandidateFitness > secondCandidateFitness){
+			breedingPopulation.push_back(candidates[firstCandidateIndex]);
+		}
+		else{
+			breedingPopulation.push_back(candidates[secondCandidateIndex]);
+		}
 
-  vector<candidateFitnessAndPosition> candidateFitness;
+		counter+=1;
+	}
 
-  for(int i = 0; i < mValue; i++){
-
-  	//For candidates of size N, this gives us range of 0 to N-1 indexes
-    int randomIndex = rand() % candidates.size();
-
-    int fitness = getFitnessIntegers(vectorOfClauses, candidates[randomIndex]);
-
-    candidateFitnessAndPosition candidateStruct;
-    candidateStruct.fitnessScore = fitness;
-
-    candidateStruct.indexInCandidateVector = randomIndex;
-
-    candidateStruct.probabilityForSelection = 0;
-    candidateFitness.push_back(candidateStruct);
-  }
-
-  sort(candidateFitness.begin(), candidateFitness.end(), descending);
-
-  vector<vector<int> > breedingPopulation;
-
-  for(int i = 0; i < k; i ++){
-    breedingPopulation.push_back(candidates[candidateFitness[i].indexInCandidateVector]);
-  }
-
-  return breedingPopulation;
+	return breedingPopulation;
 
 }
 
@@ -286,13 +261,19 @@ vector<vector<int> > boltzmannSelection(vector< vector<int> > candidates, vector
 
 
   double denom = 0;
-
+  double scale = 100.0;
+  vector<double> efitness;
   //calculate denominator
   for(int i = 0; i< candidates.size(); i++){
-    double fitness = getFitnessIntegers(vectorOfClauses, candidates[i]) / (double)numberOfClauses;
 
+  	//gives us fitness as a proportion
+
+    double fitness = ( (double)getFitnessIntegers(vectorOfClauses, candidates[i]) ) / ((double)numberOfClauses);
+    fitness *= scale;
+   
     double eToPower = pow(EulerConstant, fitness);
     denom+= eToPower;
+    efitness.push_back(eToPower);
   }
 
   vector<vector<int> > breedingPopulation;
@@ -300,19 +281,15 @@ vector<vector<int> > boltzmannSelection(vector< vector<int> > candidates, vector
   int counter = 0;
 
   //randomly select candidates.size() number of individuals for the vector 
-  while(counter < candidates.size()){
+  while(counter < candidates.size()) {
     int randomIndex = rand() % candidates.size();
 
-    //is this right???
-    //THIS IS A BUG. NUMERATOR / DENOM is almost never greater than random probability, which is why this shit takes so long 
-    double randomProbability =  (rand() % 101) / 100.0f;
+    double randomProbability =  (double)rand()/ (double)RAND_MAX;
 
-    double fitness = getFitnessIntegers(vectorOfClauses, candidates[randomIndex]) / (double)numberOfClauses;
+    double numerator = efitness[randomIndex];
+   // cout << numerator / denom << endl;
 
-    double numerator = pow(EulerConstant, fitness);
-  //  cout<<numerator/denom<<endl;
-
-    if(numerator/denom <= randomProbability){
+    if(randomProbability <= numerator/denom){
       breedingPopulation.push_back(candidates[randomIndex]);
       counter+=1;
     }
@@ -349,8 +326,10 @@ vector<vector<int> > rankSelection( vector< vector<int> > candidates, vector< ve
   //yields a vector of structs where they are ordered by highest fitness score to lowest fitness score
   sort(candidateFitness.begin(), candidateFitness.end(), descending);
 
+
+
 /* Ostensibly fixes the sum issue */
-  double sum;
+  double sum = 0.0f;
   for(int i =1; i <candidateFitness.size()+1; i++){
   	sum+=i;
   }
@@ -360,6 +339,14 @@ vector<vector<int> > rankSelection( vector< vector<int> > candidates, vector< ve
   }
   /*Fixes sum */
 
+  for(int i = 0; i < candidateFitness.size(); i++){
+  	cout<<"Rank: "<<i<<endl;
+  	cout<<"Fitness: "<<candidateFitness[i].fitnessScore<<endl;
+  	cout<<"probabilityForSelection: "<<candidateFitness[i].probabilityForSelection<<endl;
+
+  }
+
+
   vector<vector<int> > breedingPopulation;
 
   int counter = 0;
@@ -367,9 +354,9 @@ vector<vector<int> > rankSelection( vector< vector<int> > candidates, vector< ve
   while(counter < candidates.size()){
     int randomIndex = rand() % candidateFitness.size();
 
-    double randomProbability = (rand() % 101) / 100.0f;
+    double randomProbability = (double)rand()/ (double)RAND_MAX;
 
-    if(candidateFitness[randomIndex].probabilityForSelection <= randomProbability){
+    if(randomProbability <= candidateFitness[randomIndex].probabilityForSelection){
       breedingPopulation.push_back(candidates[candidateFitness[randomIndex].indexInCandidateVector]);
       counter+=1;
     }
