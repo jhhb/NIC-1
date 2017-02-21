@@ -37,10 +37,10 @@ int main( int argc, const char* argv[] )
 {
 	//format of a GA run
 
-	runGA("/Users/jamesboyle/Desktop/NIC-1/NIC-1/project1-ga-pbil-for-maxsat 2/maxsat-problems/maxsat-crafted/MAXCUT/SPINGLASS/t3pm3-5555.spn.cnf",
-		100, "ts", "1c", 0.7, 0.01, 100);
+	runGA("/Users/mbernard/Computer Science/Nature_Inspired/project1-ga-pbil-for-maxsat/maxsat-problems/maxsat-crafted/MAXCUT/SPINGLASS/t3pm3-5555.spn.cnf",
+		100, "rs", "uc", 0.7, 0.01, 20);
 
-	pbil("/Users/jamesboyle/Desktop/NIC-1/NIC-1/project1-ga-pbil-for-maxsat 2/maxsat-problems/maxsat-crafted/MAXCUT/SPINGLASS/t3pm3-5555.spn.cnf",
+	pbil("/Users/mbernard/Computer Science/Nature_Inspired/project1-ga-pbil-for-maxsat/maxsat-problems/maxsat-crafted/MAXCUT/SPINGLASS/t3pm3-5555.spn.cnf",
 		100, 0.01, 0.01, 0.01, 0.05, 20);
 }
 
@@ -51,72 +51,90 @@ new array.
 We then return the newCandidates
 */
 vector<vector<int> > crossoverWrapper(string crossover, int numberOfIndividuals, vector<vector<int> > breedingPool, double crossoverProbability, double mutationProbability){
+	
 	vector<vector<int> > newCandidates;
-	vector<int> child;
+	vector<int> child1;
+	vector<int> child2;
 
 	//1point crossover
 	if(crossover == "1c"){
 
-			int offspringCounter = 0;
+			int i = 0; //offspring counter and breeding pool iterator
 
 			//generate numberOfIndividuals offspring from the breeding pool
-			while(offspringCounter < numberOfIndividuals){
-				int parent1Index = rand() % breedingPool.size();
-				int parent2Index = rand() % breedingPool.size();
-				
-				//Is this right???
-
-				double randomProbability = (rand() % 101) / 100.0f;
+			while(i < numberOfIndividuals - 1){
+	
+				double randomProbability = (double)rand()/(double)RAND_MAX;
     			//used to be randomProb <= prob
-				if( mutationProbability <= randomProbability){
+				if(crossoverProbability <= randomProbability){
 
-					child = onePointCrossover(breedingPool[parent1Index], breedingPool[parent2Index], rand() % breedingPool[parent1Index].size() );
+					int crossPoint = rand() % breedingPool[i].size();
+					child1 = onePointCrossover(breedingPool[i], breedingPool[i+1], crossPoint);
+					child2 = onePointCrossover(breedingPool[i+1], breedingPool[i], crossPoint);
 				}
-				else{
-					child = breedingPool[parent1Index];
+				else {
+					child1 = breedingPool[i];
+					child2 = breedingPool[i+1];
 				}
 
-				/*Call crossover probability */
-				/*Call crossover probability */
+				child1 = gaMutate(child1, mutationProbability);
+				child2 = gaMutate(child2, mutationProbability);
 
-				gaMutate(child, mutationProbability);
+				newCandidates.push_back(child1);
+				newCandidates.push_back(child2);
 
-				newCandidates.push_back(child);
+				i += 2;
 
-				offspringCounter+=1;
+				if (newCandidates.size() >= breedingPool.size()) {
+					if (breedingPool.size() % 2 == 0) {
+						break;
+					} else {
+						newCandidates.push_back(breedingPool[i]);
+						i += 1;
+					}
+				}
 			}
-
 		}
 
 		//Uniform Crossover
-		else{
-			int offspringCounter = 0;
+		else {
+
+			int i = 0;
 
 			//generate numberOfIndividuals offspring from the breeding pool
-			while(offspringCounter < numberOfIndividuals){
-				int parent1Index = rand() % breedingPool.size();
-				int parent2Index = rand() % breedingPool.size();
+			while(i < numberOfIndividuals - 1){
+				
+				double randomProbability = (double)rand()/(double)RAND_MAX;
+    			
+				if(randomProbability <= crossoverProbability){
 
-				/*Call crossover probability */
-
-				double randomProbability = (rand() % 101) / 100.0f;
-
-				if( mutationProbability <= randomProbability){
-					child = uniformCrossover(breedingPool[parent1Index], breedingPool[parent2Index]);
+					child1 = uniformCrossover(breedingPool[i], breedingPool[i+1]);
+					child2 = uniformCrossover(breedingPool[i], breedingPool[i+1]);
 				}
-				else{
-					child = breedingPool[parent1Index];
+				else {
+
+					child1 = breedingPool[i];
+					child2 = breedingPool[i+1];
 				}
 
-				/*Call crossover probability */
-				gaMutate(child, mutationProbability);
+				child1 = gaMutate(child1, mutationProbability);
+				child2 = gaMutate(child2, mutationProbability);
 
-				newCandidates.push_back(child);
+				newCandidates.push_back(child1);
+				newCandidates.push_back(child2);
 
-				offspringCounter+=1;
+				i += 2;
+
+				if (newCandidates.size() >= breedingPool.size()) {
+					if (breedingPool.size() % 2 == 0) {
+						break;
+					} else {
+						newCandidates.push_back(breedingPool[i]);
+						i += 1;
+					}
+				}
 			}
 		}
-
 		return newCandidates;
 }
 
@@ -165,7 +183,6 @@ void runGA(string fileName, int numberOfIndividuals, string selection, string cr
 		//crossover
 		/*Need to check if we are doing 1c, uc correctly, if uc needs a probability associated with it or a probability for one parent */
 		vector<vector<int> > newCandidates = crossoverWrapper(crossover, numberOfIndividuals, breedingPool, crossoverProbability, mutationProbability);
-
 		generationCounter+=1;
 
 		candidates = newCandidates;
@@ -191,14 +208,9 @@ vector<int> gaMutate(vector<int> child, double probabilityOfMutation){
 
 	for(int i = 0; i < child.size(); i++){
 
-	//IS THIS RIGHT???
+    double randomProbability = (double)rand()/(double)RAND_MAX;
 
-		//rand() / RAND_MAX	//cast to double 
-
-    double randomProbability = (rand() % 101) / 100.0f;
-
-    	//used to be randomProb <= prob
-		if(probabilityOfMutation <= randomProbability){
+		if(randomProbability <= probabilityOfMutation){
 			if(child[i] == 0){
 				child[i] = 1;
 			}
@@ -207,7 +219,6 @@ vector<int> gaMutate(vector<int> child, double probabilityOfMutation){
 			}
 		}
 	}
-
 	return child;
 }
 
@@ -228,9 +239,12 @@ Ask majercik about k and mValue
 /*
 HOW DO WE PICK THESE??
 */
-  int k = 20;
 
-  int mValue = 50;
+
+
+  int k = 1; // k = 1;
+
+  int mValue = 2; // mValue = 2;
 
   vector<candidateFitnessAndPosition> candidateFitness;
 
@@ -467,6 +481,7 @@ void pbil(string fileName, int numIndividuals, double plr, double nlr, double mu
 				worstVect.push_back(1);
 			}
 
+				//MOVE PLR UP
 			if(bestVect.at(i) != worstVect.at(i))
 			{
 				probVector.at(i) = probVector.at(i) * (1.0 - plr) + bestVect.at(i) * plr;
