@@ -37,11 +37,11 @@ void pbilTester(string fileName);
 int main( int argc, const char* argv[] )
 {
 	//format of a GA run
-	string filePath = "/Users/jboyle/Desktop/NIC/NIC-1/project1-ga-pbil-for-maxsat 2/maxsat-problems/maxsat-crafted/MAXCUT/DIMACS_MOD/";
+	string filePath = "";
 
 
 	//string fileName = "t7pm3-9999.spn.cnf";
-    string fileName = "San1000.clq.cnf";
+    string fileName = "t3pm3-5555.spn.cnf";
 	//"/Users/jamesboyle/Desktop/NIC-1/NIC-1/project1-ga-pbil-for-maxsat 2/maxsat-problems/maxsat-crafted/MAXCUT/SPINGLASS/t3pm3-5555.spn.cnf";
 	
 	string fullPath = filePath + fileName;
