@@ -13,266 +13,60 @@
 
 using namespace std;
 
-void martinTests();
-void justinTests();
 const double EulerConstant = std::exp(1.0);
 
 vector<vector<int> > rankSelection( vector< vector<int> > candidates, vector< vector<int> > vectorOfClauses);
 vector<vector<int> > tournamentSelection( vector< vector<int> > candidates, vector< vector<int> > vectorOfClauses);
 vector<vector<int> > boltzmannSelection( vector< vector<int> > candidates, vector< vector<int> > vectorOfClauses, int numberOfClauses);
 vector<int> gaMutate(vector<int> child, double probabilityOfMutation);
-int runGA(string fileName, int numberOfIndividuals, string selection, string crossover, double crossoverProbability, double mutationProbability, int numberOfGenerations);
+void runGA(string fileName, int numberOfIndividuals, string selection, string crossover, double crossoverProbability, double mutationProbability, int numberOfGenerations);
 
 int getFitness(vector< vector<int> > cnf, vector<bool> cs);
 void printVofV(vector< vector<int> > cnf);
-int pbil(string fileName, int numIndividuals, double plr, double nlr, double mutProb, double mutAmount, int numIterations);
+void pbil(string fileName, int numIndividuals, double plr, double nlr, double mutProb, double mutAmount, int numIterations);
 vector< vector<bool> > genCS(int numIndividuals, vector<double> probVector);
 vector<double> mutate(vector<double> pv, double mutProb, double mutAmount);
 
 bool descending (candidateFitnessAndPosition i, candidateFitnessAndPosition j) { return (i.fitnessScore < j.fitnessScore); }
 
-void gaTester(string fileName);
-void pbilTester(string fileName);
-
 int main( int argc, const char* argv[] )
 {
-	//format of a GA run
-	string filePath = "";
-
-
-	//string fileName = "t7pm3-9999.spn.cnf";
-    string fileName = "t3pm3-5555.spn.cnf";
-	//"/Users/jamesboyle/Desktop/NIC-1/NIC-1/project1-ga-pbil-for-maxsat 2/maxsat-problems/maxsat-crafted/MAXCUT/SPINGLASS/t3pm3-5555.spn.cnf";
-	
-	string fullPath = filePath + fileName;
-	int numberOfIndividuals = 100;
-	string selection = "ts";
-	string crossover = "1c";
-	double crossoverProbability = 0.7;
-	double mutationProbability = 0.01;
-	double generations = 300;
-  //  cout << pbil(fileName, 100, 0.1, 0.075, 0.02, 0.05, 100) << endl;
-    gaTester(fullPath);
-   //pbilTester(fullPath);
-
-
-}
-
-void pbilTester(string fileName){
-    cout<<fileName<<endl;
-    int numVar;
-    int numClauses;
-    vector< vector<int> > cnf = readFile(fileName, &numVar, &numClauses);
-    cout << "numVar=" << numVar << " and numClauses=" << numClauses << endl;
-    
-    
-    int iterationsTested = 10;
-    double workingSum = 0.0;
-    double averagePerf = 0.0;
-    
-    //starting values
-    int numberOfIndividuals     =100;
-
-    double plr                  =0.05;
-    double nlr                  =0.075;
-    double mutProb              =0.02;
-    double mutAmount            =0.1;
-
-    int numberOfIterations      =500;
-
-
-    for(int g = 0; g < iterationsTested; g++){
-
-        workingSum = workingSum + pbil(fileName, numberOfIndividuals, plr, nlr, mutProb, mutAmount, numberOfIterations);
-        cout<<g<<endl;
+    /*check these*/
+    if(argc != 9){
+        cout<<"GA usage: fileName numberOfIndividuals selectionType crossoverType crossoverProbability mutationProbability numberOfGenerations"<<endl;
+        cout<<"Program exiting"<<endl;
+        exit(-1);
     }
-    
-    averagePerf = (double)workingSum/(double)iterationsTested;
-    workingSum = 0.0;
-    
-    cout << "NumInd=" << numberOfIndividuals << "  plr=" << plr << "  nlr=" << nlr << "  mProb=" << mutProb << "  mAmount=" <<
-    mutAmount << "  NumIt=" << numberOfIterations << "  average fitness=" << averagePerf << endl;
+    if(strncmp(argv[8],"ga",1) == 0){
 
-    // for(int a = 0; a <= 1; a++){
-    //     //mod numIndividuals
-    //     if(a==0){numberOfIndividuals=100;}
-    //     if(a==1){numberOfIndividuals=200;}
-    //     for(int b = 0; b <= 2; b++){
-    //         //mod plr
-    //         if(b==0){plr=0.1;}
-    //         if(b==1){plr=0.05;}
-    //         if(b==2){plr=0.2;}
-    //         for(int c = 0; c <= 2; c++){
-    //             //mod nlr
-    //             if(c==0){nlr=0;}
-    //             if(c==1){nlr=0.075;}
-    //             if(c==2){nlr=0.15;}
-    //             for(int d = 0; d <= 1; d++){
-    //                 //mod mutProb
-    //                 if(d==0){mutProb=0.01;}
-    //                 if(d==1){mutProb=0.02;}
-    //                 if(d==2){mutProb=0.04;}
-    //                 for(int e = 0; e <= 1; e++){
-    //                     //mod mutProb
-    //                     if(e==0){mutAmount=.05;}
-    //                     if(e==1){mutAmount=0.1;}
-    //                     for(int f = -1; f <=1; f++){
-    //                         //mod numGen
-    //                         if(f==-1){numberOfIterations = 200;}
-    //                         if(f==0){numberOfIterations = 1000;}
-    //                         if(f==1){numberOfIterations = 2000;}
-    //                         for(int g = 0; g < iterationsTested; g++){
-    //                             workingSum = workingSum + pbil(fileName, numberOfIndividuals, plr, nlr, mutProb, mutAmount, numberOfIterations);
-    //                         }
-    //                         averagePerf = (double)workingSum/(double)iterationsTested;
-    //                         workingSum = 0.0;
-    //                         cout << "NumInd=" << numberOfIndividuals << "  plr=" << plr << "  nlr=" << nlr << "  mProb=" << mutProb << "  mAmount=" << mutAmount << "  NumIt=" << numberOfIterations << "  average fitness=" << averagePerf << endl;
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-}
-
-void gaTester(string fileName){
-    cout<<"FILENAME: "<<fileName<<endl;
-    int numVar;
-    int numClauses;
-    vector< vector<int> > cnf = readFile(fileName, &numVar, &numClauses);
-    cout << "numVar=" << numVar << " and numClauses=" << numClauses << endl;
-    
-    
-    int iterationsTested = 10;
-    double workingSum = 0.0;
-    double averagePerf = 0.0;
-    
-    //starting values
-    int numberOfIndividuals             =100;
-    string selection                    ="bs";
-    string crossover                    ="1c";
-    double crossoverProbability         =0.7;
-    double mutationProbability          =0.01;
-    int numberOfGenerations             =500;
-
-    for(int g = 0; g < iterationsTested; g++){
-        workingSum = workingSum + runGA(fileName, numberOfIndividuals, selection, crossover, crossoverProbability, mutationProbability, numberOfGenerations);
-        cout<<g<<endl;
+        string fileName = argv[1];
+        int numberOfIndividuals = atoi(argv[2]);
+        string selectionType = argv[3];
+        string crossoverType = argv[4];
+        double crossoverProbability = stod(argv[5]);
+        double mutationProbability = stod(argv[6]);
+        int numberOfGenerations = atoi(argv[7]);
+        //argv 8 == g
+        runGA(fileName, numberOfIndividuals, selectionType, crossoverType, crossoverProbability, mutationProbability, numberOfGenerations);
     }
-    
-    averagePerf = (double)workingSum/(double)iterationsTested;
-    workingSum = 0.0;
+    else if(strncmp(argv[8],"p",1) == 0) {
 
-    cout << "NumInd=" << numberOfIndividuals << "  selection=" << selection << "  crossover=" << crossover << "  cProb=" << 
-    crossoverProbability << "  mProb=" << mutationProbability << "  NumGen=" << numberOfGenerations << "  average fitness=" 
-    << averagePerf << endl;
-    
-    // for(int i = 0; i < iterationsTested; i++){
-    //     workingSum = workingSum + runGA(fileName, numberOfIndividuals, selection, crossover, crossoverProbability, mutationProbability, numberOfGenerations);
-    // }
-    // averagePerf = (double)workingSum/(double)iterationsTested;
-    // workingSum = 0.0;
-    // cout << "NumInd=" << numberOfIndividuals << "  selection=" << selection << "  crossover=" << crossover << "  cProb=" << crossoverProbability << "  mProb=" << mutationProbability << "  NumGen=" << numberOfGenerations << "  average fitness=" << averagePerf << endl;
-    
-    // //adjusting one var at a time
-    // //number of individuals
-    // numberOfIndividuals = 200;
-    // for(int i = 0; i < iterationsTested; i++){
-    //     workingSum = workingSum + runGA(fileName, numberOfIndividuals, selection, crossover, crossoverProbability, mutationProbability, numberOfGenerations);
-    // }
-    // averagePerf = (double)workingSum/(double)iterationsTested;
-    // workingSum = 0.0;
-    // cout << "NumInd=" << numberOfIndividuals << "  selection=" << selection << "  crossover=" << crossover << "  cProb=" << crossoverProbability << "  mProb=" << mutationProbability << "  NumGen=" << numberOfGenerations << "  average fitness=" << averagePerf << endl;
-    // numberOfIndividuals = 100;
-    
-    // //selection type
-    // selection = "rs";
-    // for(int i = 0; i < iterationsTested; i++){
-    //     workingSum = workingSum + runGA(fileName, numberOfIndividuals, selection, crossover, crossoverProbability, mutationProbability, numberOfGenerations);
-    // }
-    // averagePerf = (double)workingSum/(double)iterationsTested;
-    // workingSum = 0.0;
-    // cout << "NumInd=" << numberOfIndividuals << "  selection=" << selection << "  crossover=" << crossover << "  cProb=" << crossoverProbability << "  mProb=" << mutationProbability << "  NumGen=" << numberOfGenerations << "  average fitness=" << averagePerf << endl;
-    // selection = "bs";
-    // for(int i = 0; i < iterationsTested; i++){
-    //     workingSum = workingSum + runGA(fileName, numberOfIndividuals, selection, crossover, crossoverProbability, mutationProbability, numberOfGenerations);
-    // }
-    // averagePerf = (double)workingSum/(double)iterationsTested;
-    // workingSum = 0.0;
-    // cout << "NumInd=" << numberOfIndividuals << "  selection=" << selection << "  crossover=" << crossover << "  cProb=" << crossoverProbability << "  mProb=" << mutationProbability << "  NumGen=" << numberOfGenerations << "  average fitness=" << averagePerf << endl;
-    // selection = "ts";
-    
-    // //crossover
-    // crossover = "uc";
-    // for(int i = 0; i < iterationsTested; i++){
-    //     workingSum = workingSum + runGA(fileName, numberOfIndividuals, selection, crossover, crossoverProbability, mutationProbability, numberOfGenerations);
-    // }
-    // averagePerf = (double)workingSum/(double)iterationsTested;
-    // workingSum = 0.0;
-    // cout << "NumInd=" << numberOfIndividuals << "  selection=" << selection << "  crossover=" << crossover << "  cProb=" << crossoverProbability << "  mProb=" << mutationProbability << "  NumGen=" << numberOfGenerations << "  average fitness=" << averagePerf << endl;
-    // crossover = "1c";
-    
-    // //crossover probability
-    // crossoverProbability = 0.9;
-    // for(int i = 0; i < iterationsTested; i++){
-    //     workingSum = workingSum + runGA(fileName, numberOfIndividuals, selection, crossover, crossoverProbability, mutationProbability, numberOfGenerations);
-    // }
-    // averagePerf = (double)workingSum/(double)iterationsTested;
-    // workingSum = 0.0;
-    // cout << "NumInd=" << numberOfIndividuals << "  selection=" << selection << "  crossover=" << crossover << "  cProb=" << crossoverProbability << "  mProb=" << mutationProbability << "  NumGen=" << numberOfGenerations << "  average fitness=" << averagePerf << endl;
-    // crossoverProbability = 0.7;
-    
-    // //mutation probability
-    // mutationProbability = .05;
-    // for(int i = 0; i < iterationsTested; i++){
-    //     workingSum = workingSum + runGA(fileName, numberOfIndividuals, selection, crossover, crossoverProbability, mutationProbability, numberOfGenerations);
-    // }
-    // averagePerf = (double)workingSum/(double)iterationsTested;
-    // workingSum = 0.0;
-    // cout << "NumInd=" << numberOfIndividuals << "  selection=" << selection << "  crossover=" << crossover << "  cProb=" << crossoverProbability << "  mProb=" << mutationProbability << "  NumGen=" << numberOfGenerations << "  average fitness=" << averagePerf << endl;
-    // mutationProbability = 0.01;
-    
+        string fileName = argv[1];
+        int numberOfIndividuals = atoi(argv[2]);
+        double plr = stod(argv[3]);
+        double nlr = stod(argv[4]);
+        double mutationProbability = stod(argv[5]);
+        double mutationAmount = stod(argv[6]);
+        int numberOfGenerations = atoi(argv[7]);
+        //argv is numberOfGenerations
 
-    
-    // for(int a = 0; a <= 1; a++){
-    //     //mod numIndividuals
-    //     if(a==0){numberOfIndividuals=100;}
-    //     if(a==1){numberOfIndividuals=200;}
-    //     for(int b = 0; b <= 2; b++){
-    //         //mod selection
-    //         if(b==0){selection="ts";}
-    //         if(b==1){selection="rs";}
-    //         if(b==2){selection="bs";}
-    //         for(int c = 0; c <= 1; c++){
-    //             //mod crossover
-    //             if(c==0){crossover="1c";}
-    //             if(c==1){crossover="uc";}
-    //             for(int d = 0; d <= 1; d++){
-    //                 //mod crossover prob
-    //                 if(d==0){crossoverProbability=.7;}
-    //                 if(d==1){crossoverProbability=.9;}
-    //                 for(int e = 0; e <= 1; e++){
-    //                     //mod mutProb
-    //                     if(e==0){mutationProbability=.01;}
-    //                     if(e==1){mutationProbability=.1;}
-    //                     for(int f = -1; f <=1; f++){
-    //                         //mod numGen
-    //                         if(f==-1){numberOfGenerations = 200;}
-    //                         if(f==0){numberOfGenerations = 400;}
-    //                         if(f==1){numberOfGenerations = 600;}
-    //                         for(int g = 0; g < iterationsTested; g++){
-    //                             workingSum = workingSum + runGA(fileName, numberOfIndividuals, selection, crossover, crossoverProbability, mutationProbability, numberOfGenerations);
-    //                         }
-    //                         averagePerf = (double)workingSum/(double)iterationsTested;
-    //                         workingSum = 0.0;
-    //                         cout << "NumInd=" << numberOfIndividuals << "  selection=" << selection << "  crossover=" << crossover << "  cProb=" << crossoverProbability << "  mProb=" << mutationProbability << "  NumGen=" << numberOfGenerations << "  average fitness=" << averagePerf << endl;
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-     
+        pbil(fileName, numberOfIndividuals, plr, nlr, mutationProbability, mutationAmount, numberOfGenerations);
+    }
+    else{
+        exit(-1);
+    }
+    /*Check these*/
+
 }
 
 
@@ -370,7 +164,7 @@ vector<vector<int> > crossoverWrapper(string crossover, int numberOfIndividuals,
 		return newCandidates;
 }
 
-int runGA(string fileName, int numberOfIndividuals, string selection, string crossover, double crossoverProbability, double mutationProbability, int numberOfGenerations){
+void runGA(string fileName, int numberOfIndividuals, string selection, string crossover, double crossoverProbability, double mutationProbability, int numberOfGenerations){
 
 	int numberOfVariables = 0;	//from readFile
 	int numberOfClauses = 0;	//comes from readFile
@@ -378,15 +172,11 @@ int runGA(string fileName, int numberOfIndividuals, string selection, string cro
 	vector<vector<int> > vectorOfClauses = readFile(fileName, &numberOfVariables, &numberOfClauses);	//clauses in vector<vector<int>>
 	vector<vector<int> > breedingPool;	//breeding pool after selection occurs
 	vector<vector<int> > candidates = genSolutions(numberOfVariables, numberOfIndividuals); //starting candidate solutions
-
-    
-    
 	int maxFitness = 0;
 	int indexOfBestThisGenerationFitness;
 	double bestFitnessSoFar = 0;
 	int indexOfCandidateWithBestFitness;
-
-	/* Done just to see what our "best" is at the start so we can compare at end */
+    int iterationWhereBestIsFound;
 
 	while(generationCounter < numberOfGenerations){
 		int thisGenerationFitness = 0;
@@ -403,12 +193,13 @@ int runGA(string fileName, int numberOfIndividuals, string selection, string cro
 		if(thisGenerationFitness > maxFitness){
 			maxFitness = thisGenerationFitness;
 			indexOfCandidateWithBestFitness = indexOfBestThisGenerationFitness;
+            iterationWhereBestIsFound = generationCounter;
 		}
 
 		if(maxFitness == numberOfClauses){
 			break;
-			//time to print
 		}
+
 		//select from breeding pool
 		if(selection == "rs"){
 			breedingPool = rankSelection(candidates, vectorOfClauses);
@@ -439,7 +230,15 @@ int runGA(string fileName, int numberOfIndividuals, string selection, string cro
 	for(int i = 0; i < candidates[indexOfCandidateWithBestFitness].size(); i++){
 		bestAsString += to_string(candidates[indexOfCandidateWithBestFitness][i]);
 	}
-    return maxFitness;
+    /*Check this*/
+    cout<<"1. filename: "<<fileName<<endl;
+    cout<<"2. Number of variables: "<<numberOfVariables<<", Number of clauses: "<<numberOfClauses<<endl;
+    cout<<"3. Best assignment number of clauses satisfied:"<<maxFitness<<", Best assignment percentage of clauses satisfied: "
+    <<(double)maxFitness/(double)numberOfClauses<<endl;
+    cout<<"4. Assignment with best fitness: "<<bestAsString<<endl;
+    cout<<"5. Iteration assignment was found: "<<iterationWhereBestIsFound<<endl;
+    /*Check this*/
+
 }
 
 vector<int> gaMutate(vector<int> child, double probabilityOfMutation){
@@ -488,10 +287,12 @@ vector<vector<int> > tournamentSelection(vector< vector<int> > candidates, vecto
 
 }
 
+
 vector<vector<int> > boltzmannSelection(vector< vector<int> > candidates, vector<vector<int> > vectorOfClauses, int numberOfClauses){
 
   double denom = 0;
   double scale = 100.0;
+  //prevents this from running really slowly
   vector<double> efitness;
   //calculate denominator
   for(int i = 0; i< candidates.size(); i++){
@@ -530,6 +331,9 @@ vector<vector<int> > boltzmannSelection(vector< vector<int> > candidates, vector
 /*
 For each candidate, create a struct for it with probability of selection, fitness, and index in original candidate vector. This is so we can get the right candidate
 after we sort our vector for ranking.
+
+We assign probability to each candidate based upon the summation formula, and then we select candidates until we have filled our breeding
+pool
 
 */
 vector<vector<int> > rankSelection( vector< vector<int> > candidates, vector< vector<int> > vectorOfClauses){
@@ -576,7 +380,7 @@ vector<vector<int> > rankSelection( vector< vector<int> > candidates, vector< ve
   return breedingPopulation;
 }
 
-int pbil(string fileName, int numIndividuals, double plr, double nlr, double mutProb, double mutAmount, int numIterations)
+void pbil(string fileName, int numIndividuals, double plr, double nlr, double mutProb, double mutAmount, int numIterations)
 {
 	//reads in cnf
 	int numVar;
@@ -596,17 +400,28 @@ int pbil(string fileName, int numIndividuals, double plr, double nlr, double mut
 
 	int itNum = 0;
 	bool updating = true;
+    int iterationWhereBestIsFound = 0;
+    int maxFitness = 0;
+    int indexOfCandidateWithBestFitness = 0;
 
-	double firstFitness = 0;
+    vector<vector<bool> > cs;
 
 	while(updating)
 	{
-		vector< vector<bool> > cs = genCS(numIndividuals, probVector);
+		cs = genCS(numIndividuals, probVector);
 
 		//gets fitness for each solution
 		for(int i = 0; i < numIndividuals; i++)
 		{
-			fitness.push_back(getFitness(cnf, cs.at(i)));
+            int gottenFitness = getFitness(cnf, cs.at(i));
+			fitness.push_back(gottenFitness);
+
+            if(gottenFitness > maxFitness){
+                maxFitness = gottenFitness;
+                indexOfCandidateWithBestFitness = i;
+                iterationWhereBestIsFound = itNum;
+            }
+
 		}
 
 		//finds best and worst solution
@@ -642,8 +457,6 @@ int pbil(string fileName, int numIndividuals, double plr, double nlr, double mut
 			break;
             cout << "Found solution." << endl;
 		}
-
-
 		//updating the probVector
 		//create bestVect (where true=1)
 		//create worstVect (where false=1)
@@ -666,8 +479,7 @@ int pbil(string fileName, int numIndividuals, double plr, double nlr, double mut
 			}else{
 				worstVect.push_back(0);
 			}
-
-			
+	
             probVector.at(i) = probVector.at(i) * (1.0 - plr) + bestVect.at(i) * plr;
             
 			if(bestVect.at(i) != worstVect.at(i))
@@ -676,7 +488,6 @@ int pbil(string fileName, int numIndividuals, double plr, double nlr, double mut
 			}
 
 		}
-
 		probVector = mutate(probVector, mutProb, mutAmount);
 		itNum++;
 		if(itNum == numIterations)
@@ -685,19 +496,22 @@ int pbil(string fileName, int numIndividuals, double plr, double nlr, double mut
 		}
 	}
 
-	double maxFitness = 0;
+    string bestAsString;
 
-	for(int i =0; i<fitness.size(); i++){
-		if(fitness[i] > maxFitness){
-			maxFitness = fitness[i];
-		}
-	}
-	return maxFitness;
-	//couts
+    for(int i = 0; i < cs[indexOfCandidateWithBestFitness].size(); i++){
+        bestAsString += to_string(cs[indexOfCandidateWithBestFitness][i]);
+    }
+     /*Check this*/
+    cout<<"1. filename: "<<fileName<<endl;
+    cout<<"2. Number of variables: "<<numVar<<", Number of clauses: "<<numClauses<<endl;
+    cout<<"3. Best assignment number of clauses satisfied:"<<maxFitness<<", Best assignment percentage of clauses satisfied: "
+    <<(double)maxFitness/(double)numClauses<<endl;
+    cout<<"4. Assignment with best fitness: "<<bestAsString<<endl;
+    cout<<"5. Iteration assignment was found: "<<iterationWhereBestIsFound<<endl;
+    /*Check this*/
 }
 
 //function that generates candidate solutions taking in N and probVector --> vector of vectors
-//TESTED: GOOD
 vector< vector<bool> > genCS(int numIndividuals, vector<double> probVector)
 {
 	vector< vector<bool> > cs;
@@ -721,6 +535,7 @@ vector< vector<bool> > genCS(int numIndividuals, vector<double> probVector)
 	return cs;
 }
 
+//mutation function employed by pbil that updates the probability vector
 vector<double> mutate(vector<double> pv, double mutProb, double mutAmount)
 {
 	vector<double> newPV = pv;
@@ -743,6 +558,7 @@ vector<double> mutate(vector<double> pv, double mutProb, double mutAmount)
 	return newPV;
 }
 
+//get fitness function employed by pbil
 int getFitness(vector< vector<int> > cnf, vector<bool> cs)
 {
 	int indexNum;
@@ -766,109 +582,4 @@ int getFitness(vector< vector<int> > cnf, vector<bool> cs)
 		}
 	}
 	return fitValue;
-}
-
-
-
-void martinTests(){
-
-	// need this so that the rand() function works. the beginning of main() is the only place it ever needs to go
-  	srand(time(0));
-
-  	// vectors to test crossover on
-  	vector<int> mom;
-  	vector<int> dad;
-
-  	// length of the solutions used throughout testing. each solution vector has 25 elements (this comes from the problem file)
-  	int variables = 25;
-  	// size of the desired population for each generation to have (this comes from the command line argument)
-  	int genPopulation = 20;
-
-  	// just puting all 0s in mom and all 1s in dad
-  	for (int i = 0; i < variables; i++) {
-
-  		mom.push_back(0);
-  		dad.push_back(1);
-  	}
-
-  	// crosspoint for 1 point c-over is calculated outside the function so that the children each have the genes that the other doesn't
-  	// just make sure you switch the order of the two vectors in the two calls (see mom, dad; then dad, mom below)
-  	int crossPoint = rand() % variables; 
-  	vector<int> baby1 = onePointCrossover(mom, dad, crossPoint);
-  	vector<int> baby2 = onePointCrossover(dad, mom, crossPoint);
-
-  	// children in uniform crossover are random each time. it was easier to do it this way and if it gets brought up we can say its
-  	// more like how it is in nature.
-  	vector<int> baby3 = uniformCrossover(mom, dad);
-  	vector<int> baby4 = uniformCrossover(dad, mom);
-
-
-  	// printing.......
-
-  	cout << "Two Single Point Crossover Babies:" << endl;
-  	for (int i = 0; i < variables; i++) {
-  		cout << baby1.at(i);
-  	}
-  	cout << endl;
-  	for (int i = 0; i < variables; i++) {
-  		cout << baby2.at(i);
-  	}
-  	cout << endl;
-  	cout << "Two Uniform Crossover Babies:" << endl;
-  	for (int i = 0; i < variables; i++) {
-  		cout << baby3.at(i);
-  	}
-  	cout << endl;
-  	for (int i = 0; i < variables; i++) {
-  		cout << baby4.at(i);
-  	}
-  	cout << endl;
-	
-	// create population of solutions
-  	vector< vector<int> > test;
-
-  	//have vector of vector of ints 
-	test = genSolutions(variables, genPopulation);
-
-	// print those solutions
-	cout << "Original Generation:" << endl;
-	for (int i = 0; i < genPopulation; i++) {
-		cout << "Candidate #" << i << ": ";
-		for (int j = 0; j < variables; j++) {
-  			cout << test.at(i).at(j);
-  		}
-  		cout << endl;
-	}
-
-	//have a generation of candidate solutions
-	//
-
-}
-
-void justinTests(){
-
-	vector< vector<int> > testCNF;
-	bool testCS[] = {false, false, false, false};
-
-	vector<int> testVector;
-
-	testVector.push_back(1);
-	testVector.push_back(2);
-	testCNF.push_back(testVector);
-	testVector.at(0) = 3;
-	testVector.at(1) = 4;
-	testCNF.push_back(testVector);
-	testVector.at(0) = -1;
-	testVector.at(1) = -2;
-	testCNF.push_back(testVector);
-	testVector.at(0) = -3;
-	testVector.at(1) = -4;
-	testCNF.push_back(testVector);
-
-	int z;
-	z = getFitness(testCNF, testCS);
-
-	cout << "4 variables; 4 clauses. Fitness is " <<  z << endl;
-	printVofV(testCNF);
-
 }
