@@ -31,6 +31,7 @@ bool descending (candidateFitnessAndPosition i, candidateFitnessAndPosition j) {
 
 int main( int argc, const char* argv[] )
 {
+	srand ( time(0) );
     /*check these*/
     if(argc != 9){
         cout<<"GA usage: fileName numberOfIndividuals selectionType crossoverType crossoverProbability mutationProbability numberOfGenerations ga"<<endl;
