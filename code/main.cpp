@@ -33,7 +33,9 @@ int main( int argc, const char* argv[] )
 {
     /*check these*/
     if(argc != 9){
-        cout<<"GA usage: fileName numberOfIndividuals selectionType crossoverType crossoverProbability mutationProbability numberOfGenerations"<<endl;
+        cout<<"GA usage: fileName numberOfIndividuals selectionType crossoverType crossoverProbability mutationProbability numberOfGenerations ga"<<endl;
+        cout<<"PBIL usage: fileName numberOfIndividuals positiveLearningRate negativeLearningRate mutationProbability mutationAmount numberOfGenerations p"<<endl;
+
         cout<<"Program exiting"<<endl;
         exit(-1);
     }
